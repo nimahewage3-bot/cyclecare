@@ -87,3 +87,42 @@ function initCalendar(){
 }
 
 document.addEventListener('DOMContentLoaded',()=>{initCalculator();initCalendar()});
+
+function initNewGuidesSlider(){
+  const track=$('#newGuidesTrack'), prev=$('#newGuidesPrev'), next=$('#newGuidesNext'), dots=$('#newGuidesDots');
+  if(!track||!dots) return;
+  const slides=[...track.querySelectorAll('.new-guide-slide')];
+  if(!slides.length) return;
+  let index=0, timer=null;
+  const dotButtons=slides.map((_,i)=>{
+    const b=document.createElement('button'); b.type='button'; b.className='slider-dot'+(i===0?' active':'');
+    b.setAttribute('aria-label',`Show guide ${i+1}`);
+    b.addEventListener('click',()=>go(i,true));
+    dots.appendChild(b); return b;
+  });
+  const go=(i,manual=false)=>{
+    index=(i+slides.length)%slides.length;
+    track.style.transform=`translateX(-${index*100}%)`;
+    dotButtons.forEach((b,n)=>b.classList.toggle('active',n===index));
+    if(manual) restart();
+  };
+  const restart=()=>{
+    if(timer) clearInterval(timer);
+    timer=setInterval(()=>go(index+1),5000);
+  };
+  prev?.addEventListener('click',()=>go(index-1,true));
+  next?.addEventListener('click',()=>go(index+1,true));
+  const shell=track.closest('.new-guides-shell');
+  shell?.addEventListener('mouseenter',()=>{if(timer) clearInterval(timer)});
+  shell?.addEventListener('mouseleave',restart);
+  shell?.addEventListener('focusin',()=>{if(timer) clearInterval(timer)});
+  shell?.addEventListener('focusout',e=>{if(!shell.contains(e.relatedTarget)) restart()});
+  let startX=0;
+  track.addEventListener('touchstart',e=>{startX=e.changedTouches[0].clientX},{passive:true});
+  track.addEventListener('touchend',e=>{
+    const dx=e.changedTouches[0].clientX-startX;
+    if(Math.abs(dx)>45) go(index+(dx<0?1:-1),true);
+  },{passive:true});
+  restart();
+}
+document.addEventListener('DOMContentLoaded',()=>{initNewGuidesSlider()});
