@@ -1,4 +1,3 @@
-
 const $ = s => document.querySelector(s);
 const fmt = d => new Intl.DateTimeFormat('en-US',{month:'long',day:'numeric',year:'numeric'}).format(d);
 const iso = d => { const x=new Date(d); return `${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}-${String(x.getDate()).padStart(2,'0')}`; };
@@ -18,7 +17,9 @@ function calculate(last,cycle,period){
   return {last,start,next,period,cycle,ov,fertileStart,fertileEnd,cycleDay,days};
 }
 function renderResults(r){
-  $('#results').classList.remove('hidden');
+  $('#results')?.classList.remove('hidden');
+  $('#emptyCalc')?.classList.add('hidden');
+  if(!$('#results')) return;
   $('#nextStart').textContent=fmt(r.next);
   $('#nextEnd').textContent=fmt(addDays(r.next,r.period-1));
   $('#ovulation').textContent=fmt(r.ov);
@@ -26,19 +27,22 @@ function renderResults(r){
   $('#cycleDay').textContent=`Day ${r.cycleDay}`;
   $('#countdown').textContent=r.days===0?'Expected around today':`${r.days} day${r.days===1?'':'s'}`;
 }
-function runCalculator(form){
-  const last=$('#lastPeriod').value, cycle=Number($('#cycleLength').value), period=Number($('#periodLength').value);
-  $('#error').textContent='';
+function runCalculator(){
+  const last=$('#lastPeriod')?.value, cycle=Number($('#cycleLength')?.value), period=Number($('#periodLength')?.value);
+  if($('#error')) $('#error').textContent='';
   if(!last){$('#error').textContent='Please enter the first day of your last period.';return}
   const d=new Date(last+'T00:00:00'), now=new Date(); now.setHours(23,59,59,999);
   if(d>now){$('#error').textContent='The last-period date cannot be in the future.';return}
   if(cycle<21||cycle>40){$('#error').textContent='Cycle length must be between 21 and 40 days.';return}
   if(period<2||period>10){$('#error').textContent='Period duration must be between 2 and 10 days.';return}
-  const r=calculate(last,cycle,period); saveCycle({last,cycle,period}); renderResults(r);
+  const r=calculate(last,cycle,period);saveCycle({last,cycle,period});renderResults(r);
 }
 function initCalculator(){
-  const saved=getCycle(); if(saved){$('#lastPeriod').value=saved.last;$('#cycleLength').value=saved.cycle;$('#periodLength').value=saved.period;renderResults(calculate(saved.last,saved.cycle,saved.period))}
-  $('#calcForm')?.addEventListener('submit',e=>{e.preventDefault();runCalculator(e.target)});
+  const saved=getCycle();
+  if(saved && $('#lastPeriod')){
+    $('#lastPeriod').value=saved.last;$('#cycleLength').value=saved.cycle;$('#periodLength').value=saved.period;renderResults(calculate(saved.last,saved.cycle,saved.period));
+  }
+  $('#calcForm')?.addEventListener('submit',e=>{e.preventDefault();runCalculator()});
   $('#clearData')?.addEventListener('click',clearCycle);
 }
 function buildCalendar(container,r,year,month){
@@ -58,7 +62,8 @@ function buildCalendar(container,r,year,month){
   }
 }
 function initCalendar(){
-  const saved=getCycle(); const box=$('#calendarGrid');
+  const saved=getCycle(), box=$('#calendarGrid');
+  if(!box || !$('#noCalendar') || !$('#calendarArea')) return;
   if(!saved){$('#noCalendar').classList.remove('hidden');$('#calendarArea').classList.add('hidden');return}
   const r=calculate(saved.last,saved.cycle,saved.period);let y=new Date().getFullYear(),m=new Date().getMonth();
   $('#calendarArea').classList.remove('hidden');$('#noCalendar').classList.add('hidden');
