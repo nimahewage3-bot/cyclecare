@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://nimahewage3-bot.github.io/cyclecare/sitemap.xml
